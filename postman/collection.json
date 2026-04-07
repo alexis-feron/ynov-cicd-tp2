@@ -1,0 +1,173 @@
+{
+  "info": {
+    "name": "Ynov CI/CD TP2 - Delivery Pricing API",
+    "description": "Collection Postman pour tester l'API du moteur de tarification de livraison.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Simulate order (no promo)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/orders/simulate", "host": ["{{baseUrl}}"], "path": ["orders", "simulate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{\"name\": \"Pizza\", \"price\": 12.5, \"quantity\": 2}],\n  \"distance\": 5,\n  \"weight\": 1,\n  \"hour\": 15,\n  \"dayOfWeek\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Simulate order (with promo BIENVENUE20)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/orders/simulate", "host": ["{{baseUrl}}"], "path": ["orders", "simulate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{\"name\": \"Pizza\", \"price\": 12.5, \"quantity\": 2}],\n  \"distance\": 5,\n  \"weight\": 1,\n  \"promoCode\": \"BIENVENUE20\",\n  \"hour\": 15,\n  \"dayOfWeek\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Simulate order (Friday night surge 1.8)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/orders/simulate", "host": ["{{baseUrl}}"], "path": ["orders", "simulate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{\"name\": \"Burger\", \"price\": 10, \"quantity\": 3}],\n  \"distance\": 7,\n  \"weight\": 2,\n  \"hour\": 20,\n  \"dayOfWeek\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "Simulate order (out of zone - 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/orders/simulate", "host": ["{{baseUrl}}"], "path": ["orders", "simulate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{\"name\": \"Pizza\", \"price\": 12.5, \"quantity\": 1}],\n  \"distance\": 15,\n  \"weight\": 1,\n  \"hour\": 15,\n  \"dayOfWeek\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Create order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('orderId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{\"name\": \"Pizza\", \"price\": 12.5, \"quantity\": 2}],\n  \"distance\": 5,\n  \"weight\": 1,\n  \"hour\": 15,\n  \"dayOfWeek\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Get order by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get order (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/orders/999", "host": ["{{baseUrl}}"], "path": ["orders", "999"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Promo",
+      "item": [
+        {
+          "name": "Validate promo (valid)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/promo/validate", "host": ["{{baseUrl}}"], "path": ["promo", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"promoCode\": \"BIENVENUE20\",\n  \"subtotal\": 50\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate promo (expired - 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/promo/validate", "host": ["{{baseUrl}}"], "path": ["promo", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"promoCode\": \"EXPIRED\",\n  \"subtotal\": 50\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate promo (below min - 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/promo/validate", "host": ["{{baseUrl}}"], "path": ["promo", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"promoCode\": \"BIENVENUE20\",\n  \"subtotal\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate promo (unknown - 404)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/promo/validate", "host": ["{{baseUrl}}"], "path": ["promo", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"promoCode\": \"UNKNOWN\",\n  \"subtotal\": 50\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
